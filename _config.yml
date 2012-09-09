@@ -2,7 +2,7 @@
 #      Main Configs       #
 # ----------------------- #
 
-url: https://hysios.github.com
+url: http://hysios.github.com
 title: Hysios Hu Blog
 subtitle: A blogging framework for hackers.
 author: hysios
@@ -13,7 +13,7 @@ description:
 # You can customize the format as defined in
 # http://www.ruby-doc.org/core-1.9.2/Time.html#method-i-strftime
 # Additionally, %o will give you the ordinal representation of the day
-date_format: "%Y 年 %m 月 %d 日"
+date_format: "ordinal"
 
 # RSS / Email (optional) subscription links (change if using something like Feedburner)
 subscribe_rss: /atom.xml
