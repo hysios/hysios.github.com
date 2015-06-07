@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: npm | Hysios Hu Blog]]></title>
+  <link href="http://hysios.github.com/blog/categories/npm/atom.xml" rel="self"/>
+  <link href="http://hysios.github.com/"/>
+  <updated>2015-06-07T20:27:35+08:00</updated>
+  <id>http://hysios.github.com/</id>
+  <author>
+    <name><![CDATA[hysios]]></name>
+    <email><![CDATA[hysios@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[使用 BabelJS 编写 nodejs package]]></title>
+    <link href="http://hysios.github.com/blog/2015/06/07/es6-node-package/"/>
+    <updated>2015-06-07T15:45:00+08:00</updated>
+    <id>http://hysios.github.com/blog/2015/06/07/es6-node-package</id>
+    <content type="html"><![CDATA[<p>我们都喜欢 ES6 优美的语法，更清晰的语义表达，所以用 ES6 语法编写 npm package 将是一件很快乐的事情。</p>
+
+<h3>初始化 npm package</h3>
+
+<p><code>bash
+mkdir es6_project
+cd es6_project
+npm init .
+</code></p>
+
+<p>系统在出现一连串提示后</p>
+
+<p>```text
+name: (es6_project)
+version: (1.0.0)
+description:
+entry point: (index.js)
+test command:
+git repository:
+keywords:
+author:
+license: (ISC)
+About to write to /Users/home/es6_project/package.json:</p>
+
+<p>{
+  "name": "es6_project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {</p>
+
+<pre><code>"test": "echo \"Error: no test specified\" &amp;&amp; exit 1"
+</code></pre>
+
+<p>  },
+  "author": "",
+  "license": "ISC"
+}
+```</p>
+
+<p>将会在当前目录下，创建一个 package.json 恭喜你一个 node package 已经创建成功了</p>
+
+<h3>怎么组织代码</h3>
+
+<p>为了让 es6 的代码，可以运行在任何环境下(browser, nodejs, es5) 需要编译与输出到新的代码，我通常会使用一个 下面这样的目录结构，当然，你可以使用任何你喜欢的一种方式，这只是一种个人选择而以
+```</p>
+
+<blockquote><p>tree
+.
+├── lib
+├── src
+├── index.js
+└── package.json</p></blockquote>
+
+<p>2 directories, 1 file
+<code>``
+</code>lib<code>存放编译后的代码  
+</code>src` 源代码目录</p>
+
+<p>两者目录结构相同，以便于代码调用，这可以由 Babel 编译器自动完成的</p>
+
+<p>我们可以在 <a href="https://docs.npmjs.com/misc/scripts"><code>prepublish script</code></a> 脚本中，编译我们的代码，也可以在 <a href="https://docs.npmjs.com/misc/developers#keeping-files-out-of-your-package">.npmignore</a> 中保留 src 中的代码</p>
+
+<h3>安装 Babel 支持</h3>
+
+<p>```</p>
+
+<blockquote><p>npm install babel --save-dev
+```</p></blockquote>
+
+<p>安装到 <code>devDependencies</code> 能让这个 package 能脱离 babel 运行，如果你只希望下载编译后的代码，放到 <code>devDependencies</code> 能让 <code>npm install</code> 不下载 Babel 编译器代码，让你的 package 更容易部署。</p>
+
+<h3>编译代码</h3>
+
+<p>当用 babel 编译代码的时候，我们可以用两种方式, 一种是 npm install -g babel 的方式，另一种则是，上面我说的到方式，为会我要说到两种方式呢，因为，当你使用 global 安装方式时候，你的项目会依赖于一个外部的全局环境，如果你想这样，也没有问题，但是如果你在开发时，或与人协作开发时，你希望部署与安装代码，更简单更自动化一点，你可以使用我推荐这种方式去做，安装 Babel 编译代码，这样你只要在下载后当前代码之后，轻松的建入 <code>npm install</code> 就能把你的开发环境准备好</p>
+
+<p>使用 babel 编译代码的方式有很多，官方上面也有明确的说明 <a href="https://babeljs.io/docs/setup/">https://babeljs.io/docs/setup/</a> 和大量的使用方式，因为我在这里使用需要编译后的代码，所以，我使用了 Makefile 这种简单的编译方式，当然，你还可能使用更多的，其它方式如: webpack, grunt, gulp,...等等工具来做 build 的事情；（可以参见 Babel 的官方资料), 先看简单代码</p>
+
+<p>```makefile</p>
+
+<h1>Makefile</h1>
+
+<p>SRC = $(shell find src -name '*.js')
+LIB = $(SRC:src/%.js=lib/%.js)</p>
+
+<p>lib: $(LIB)
+lib/%.js: src/%.js</p>
+
+<pre><code>mkdir -p $(@D)
+node_modules/.bin/babel --stage 0 $&lt; -o $@
+</code></pre>
+
+<p>```</p>
+
+<p><em>注 后面的 --stage 是我加入的参数，你可以不使用这样的配置</em></p>
+
+<p>这样，<code>make</code> 就能帮助你编译代码了，make 这样的环境，主要是在 Mac OSX/ Linux， Windows 下面可以使用 cygwin 来替代</p>
+
+<h3>安装你的依赖包</h3>
+
+<p>安装依赖包是非常简单的事情，需要注意的是依赖包分为 <code>dependencies</code> 与 <code>devDependencies</code>, 两种引入方式，这两种引入方式主要的作用前面我提过，就是当外部的包依赖你时或其他开发者引入你的包时，将不会下载你的 <code>devDependencies</code> 包，这样的作法好处之一，就是让你的包的下载量大小，大大的降低，不需要在引用你的包的同时，将你所需要的编译，准备环境都下载下来，实际上就是让你能区分开 production 环境与 development 环境。这是特别要注意的，所以你在使用安装依赖包的时候，一定要思考清楚这个依赖包是不是一定要在发布后使用。</p>
+
+<ol>
+<li>npm install --save [something package]</li>
+<li>npm install --save-dev  [something package]</li>
+</ol>
+
+
+<p>比如: <code>npm install --save-dev babel</code>; 这样别人在引你的 package 时
+```bash</p>
+
+<blockquote><p>npm install your_packge --save
+```
+将不会下载安装 babel</p></blockquote>
+
+<p>你可以使用 上面的命令，安装各种依赖包, 然后在 你的 .js 文件中引入<br/>
+如:
+```bash</p>
+
+<blockquote><p>npm install --save debug
+```
+在 index.js</p></blockquote>
+
+<p><code>js
+var log = require('debug')('Es6Project');
+/* ... */
+</code></p>
+
+<p>es6 语法</p>
+
+<p><code>js
+import debug from 'debug';
+const log = debug('ES6Proejct');
+</code></p>
+
+<h3>开始写代码</h3>
+
+<p>打开你的编辑器， 创建一个文件 <code>src/index.js</code> 开始编写你的代码。
+```js
+import assert from 'assert';</p>
+
+<p>export default class Es6Project {</p>
+
+<pre><code>/* ... */
+</code></pre>
+
+<p>}</p>
+
+<p>```</p>
+
+<p>make 会编译你的代码到 <code>lib</code> 目录下</p>
+
+<h3>测试</h3>
+
+<h4>1. 使用 <a href="http://mochajs.org">mocha</a></h4>
+
+<p><code>bash
+npm install --save-dev mocha
+</code></p>
+
+<h4>2. 建立 test 文件夹</h4>
+
+<p><code>bash
+mkdir test
+</code></p>
+
+<h4>3. 生成 test 文件</h4>
+
+<p><code>    
+mocha init test
+</code></p>
+
+<h4>4. 加入 babel 支持在 test 模式</h4>
+
+<p>我在 test 模式下，使用是 <code>babel/register</code> 来支持 es6
+<code>js
+// test/bootstrap.js
+require("babel/register")(options); // options 是自定义的选项
+</code>
+当然也可以使用
+<code>
+mocha --compilers js:babel/register"
+</code></p>
+
+<h4>5. npm test</h4>
+
+<p>add to package.json
+```json
+  "description": "ES6Proejct ",
+  "main": "index.js",
+  "scripts": {</p>
+
+<pre><code>"test": "./node_modules/.bin/mocha -r test/bootstrap"
+</code></pre>
+
+<p>  }
+```</p>
+
+<h4>6. 运行 npm test</h4>
+
+<p><code>bash
+touch test/testSpec.js
+vi test/testSpec.js
+</code>
+```js
+var assert = require('assert');
+var Es6Project = require('src/index.js');</p>
+
+<p>describe('test', function() {</p>
+
+<pre><code>it ('success', function() {
+    assert.ok(Es6Project);
+});
+</code></pre>
+
+<p>});</p>
+
+<p>```</p>
+
+<p>你可测试与的代码了, 只要简单的 <code>npm test</code></p>
+
+<h3>一些小技巧</h3>
+
+<h4>1. 发布前编译</h4>
+
+<p>package.json
+```json</p>
+
+<p>{
+  "description": "ES6Proejct ",
+  "main": "index.js",
+  "scripts": {</p>
+
+<pre><code>"prepublish": "make",
+</code></pre>
+
+<p>  },
+}
+```</p>
+
+<p>发布
+<code>bash
+npm publish
+</code></p>
+
+<h4>2. 持续集成</h4>
+
+<p>先安装 nodemon
+<code>bash
+npm install --save-dev nodemon
+</code></p>
+
+<p>加入 script 到 package.json
+```json</p>
+
+<p>{
+  "description": "ES6Proejct ",
+  "main": "index.js",
+  "scripts": {</p>
+
+<pre><code>"dev": "./node_modules/.bin/nodemon -e js -x npm test",
+</code></pre>
+
+<p>  },
+}
+<code>
+运行
+</code>bash
+npm run dev
+```</p>
+
+<p>当然修改代码一保存时，系统会自动进行测试</p>
+
+<h2>总结</h2>
+
+<p>当我们使用 Babel 进行开发的时候，既可以使用 ES6 先进语法，又能同时保持运行在 nodejs 中的性能与，而且同样支持 <code>commonjs/amd/requirejs</code> 的模块的引入与导出这种向下兼容性，所以是一种非常值得推荐的开发工具，希望能够给你的带来一些帮助。</p>
+]]></content>
+  </entry>
+  
+</feed>
