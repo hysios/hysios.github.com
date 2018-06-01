@@ -15,5 +15,6 @@ group :development do
   gem 'liquid', '~> 2.3.0'
 end
 
+gem "iconv", "~> 1.0.3"
 gem 'sinatra', '~> 1.3.2'
 gem 'susy'
